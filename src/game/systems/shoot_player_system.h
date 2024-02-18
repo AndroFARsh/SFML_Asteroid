@@ -22,13 +22,14 @@ private:
 
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
-    std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
-    std::shared_ptr<ecs::Pool<CInput>> _inputPool = nullptr;
-    std::shared_ptr<ecs::Pool<CCooldown>> _cooldownPool = nullptr;
+    std::shared_ptr<ecs::Pool<CTransform>> _transformPool;
+    std::shared_ptr<ecs::Pool<CInput>> _inputPool;
+    std::shared_ptr<ecs::Pool<CCooldown>> _cooldownPool;
 
-    std::shared_ptr<ecs::Pool<CProjectileTag>> _projectileTagPool = nullptr;
-    std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool = nullptr;
+    std::shared_ptr<ecs::Pool<CProjectileTag>> _projectileTagPool;
+    std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool;
     std::shared_ptr<ecs::Pool<CShape>> _shapePool;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool;
     std::shared_ptr<ecs::Pool<CLifespan>> _lifespanPool;
     std::shared_ptr<ecs::Pool<CCollider>> _colliderPool;
 
@@ -46,6 +47,7 @@ public:
         _projectileTagPool = world.pool<CProjectileTag>();
         _velocityPool = world.pool<CVelocity>();
         _shapePool = world.pool<CShape>();
+        _drawablePool = world.pool<CDrawable>();
         _lifespanPool = world.pool<CLifespan>();
         _colliderPool = world.pool<CCollider>();
 
@@ -72,21 +74,23 @@ public:
 
     void spawnProjectile(ecs::World& world, Vector2 position, Vector2 forward) {
         auto entity = world.newEntity();
+        auto shape = createShape(position);
 
         _projectileTagPool->add(entity);
         _transformPool->add(entity, CTransform(position + forward * _config->player.radius));
-        _shapePool->add(entity, createCShape(_config->projectile.radius, position, _config->projectile.fillColor));
+        _shapePool->add(entity, {shape });
+        _drawablePool->add(entity, {shape });
         _velocityPool->add(entity, { forward * _config->projectile.speed });
         _colliderPool->add(entity, { _config->projectile.radius });
         _lifespanPool->add(entity, {_config->projectile.lifespan });
     }
 
-    static CShape createCShape(float radius, Vector2 position, const Color& fillColor) {
-        std::shared_ptr<sf::CircleShape> shape = std::make_shared<sf::CircleShape>(radius, 8);
-        shape->setPosition(position());
-        shape->setFillColor(fillColor());
+    std::shared_ptr<sf::CircleShape> createShape(Vector2 position) {
+        auto shape = std::make_shared<sf::CircleShape>(_config->projectile.radius, 5);
+        shape->setFillColor(_config->projectile.fillColor());
         shape->setOrigin(0.5f, 0.5f);
-        return { shape };
+        shape->setPosition(position());
+        return shape;
     }
 };
 

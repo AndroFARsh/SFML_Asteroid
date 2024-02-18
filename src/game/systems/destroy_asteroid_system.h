@@ -23,6 +23,7 @@ private:
 
     std::shared_ptr<ecs::Pool<CScore>> _scorePool;
     std::shared_ptr<ecs::Pool<CShape>> _shapePool;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool;
     std::shared_ptr<ecs::Pool<CFragmentTag>> _fragmentTagPool;
     std::shared_ptr<ecs::Pool<CLifespan>> _lifespanPool;
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool;
@@ -40,6 +41,7 @@ public:
         _massPool = world.pool<CMass>();
 
         _colliderPool = world.pool<CCollider>();
+        _drawablePool = world.pool<CDrawable>();
         _fragmentTagPool = world.pool<CFragmentTag>();
         _lifespanPool = world.pool<CLifespan>();
         _shapePool = world.pool<CShape>();
@@ -106,9 +108,11 @@ public:
 
             auto forward = otherVelocityNormalized.rotate(float(i) * angleStep);
             auto position = transform.position + forward * collider.value;
+            auto shape = createShape(position);
 
             _fragmentTagPool->add(entity);
-            _shapePool->add(entity, createCShape(position));
+            _shapePool->add(entity, { shape });
+            _drawablePool->add(entity, { shape });
             _transformPool->add(entity, CTransform(position));
             _lifespanPool->add(entity, {_config->projectile.lifespan});
             _velocityPool->add(entity, {forward * _config->fragment.speed});
@@ -116,14 +120,14 @@ public:
         }
     }
 
-    CShape createCShape(Vector2 position) {
-        std::shared_ptr<sf::CircleShape> shape = std::make_shared<sf::CircleShape>(_config->fragment.radius, 3);
+    std::shared_ptr<sf::CircleShape> createShape(Vector2 position) {
+        auto shape = std::make_shared<sf::CircleShape>(_config->fragment.radius, random(3, 5));
         shape->setPosition(position());
         shape->setFillColor(_config->fragment.fillColor());
         shape->setOutlineColor(_config->fragment.outlineColor());
         shape->setOutlineThickness(_config->fragment.outlineThickness);
         shape->setOrigin(0.5f, 0.5f);
-        return {shape};
+        return shape;
     }
 
 

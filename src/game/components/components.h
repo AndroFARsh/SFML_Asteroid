@@ -16,6 +16,7 @@
 #include "speed.h"
 #include "input.h"
 #include "score.h"
+#include "drawable.h"
 #include "lifespan.h"
 #include "cooldown.h"
 #include "collider.h"

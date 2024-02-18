@@ -22,6 +22,7 @@ private:
 
     std::shared_ptr<ecs::Pool<CText>> _textPool = nullptr;
     std::shared_ptr<ecs::Pool<CScore>> _scorePool = nullptr;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool = nullptr;
 
 public:
     ScoreSystem(std::shared_ptr<Config> config)
@@ -32,16 +33,13 @@ public:
     void init(ecs::World &world) override {
         _textPool = world.pool<CText>();
         _scorePool = world.pool<CScore>();
+        _drawablePool = world.pool<CDrawable>();
 
         auto entity= world.newEntity();
-        auto text = std::make_shared<sf::Text>();
-
-        text->setPosition(20, 20);
-        text->setFont(*_config->font.font);
-        text->setCharacterSize(_config->font.size);
-        text->setFillColor(_config->font.color());
+        auto text = createText();
 
         _textPool->add(entity, { text });
+        _drawablePool->add(entity, { text });
         _scorePool->add(entity);
 
         _filter = world.buildFilter()
@@ -57,6 +55,17 @@ public:
 
             text.value->setString("Score: " +  std::to_string(score.value));
         }
+    }
+
+    std::shared_ptr<sf::Text> createText() {
+        auto text = std::make_shared<sf::Text>();
+
+        text->setPosition(20, 20);
+        text->setFont(*_config->font.font);
+        text->setCharacterSize(_config->font.size);
+        text->setFillColor(_config->font.color());
+
+        return text;
     }
 };
 

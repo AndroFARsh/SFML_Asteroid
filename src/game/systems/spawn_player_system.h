@@ -23,6 +23,7 @@ private:
 
     std::shared_ptr<ecs::Pool<CPlayerTag>> _playerTagPool = nullptr;
     std::shared_ptr<ecs::Pool<CShape>> _shapePool = nullptr;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool = nullptr;
     std::shared_ptr<ecs::Pool<CInput>> _inputPool = nullptr;
     std::shared_ptr<ecs::Pool<CMoveSpeed>> _moveSpeedPool = nullptr;
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
@@ -47,6 +48,7 @@ public:
         _moveAccelerationPool = world.pool<CMoveAcceleration>();
         _spinSpeedPool = world.pool<CSpinSpeed>();
         _colliderPool = world.pool<CCollider>();
+        _drawablePool = world.pool<CDrawable>();
 
         _filter = world.buildFilter()
                 .include<CPlayerTag>()
@@ -67,10 +69,11 @@ private:
         auto position = Vector2 (floor(_config->window.width), floor(_config->window.height)) * .5f;
 
         _playerTagPool->add(entity);
-
         _transformPool->add(entity, CTransform(position));
 
-        _shapePool->add(entity, createCShape(position)) ;
+        auto shape = createShape(position);
+        _shapePool->add(entity, {shape });
+        _drawablePool->add(entity, {shape });
 
         _inputPool->add(entity);
         _velocityPool->add(entity);
@@ -81,8 +84,8 @@ private:
         _colliderPool->add(entity, { _config->player.radius });
     }
 
-    CShape createCShape(Vector2 position) {
-        std::shared_ptr<sf::ConvexShape> shape = std::make_shared<sf::ConvexShape>();
+    std::shared_ptr<sf::ConvexShape> createShape(Vector2 position) {
+        auto shape = std::make_shared<sf::ConvexShape>();
         shape->setPointCount(4);
 
         shape->setPoint(0, sf::Vector2f(0.f, -1.f) * _config->player.radius);
@@ -97,7 +100,7 @@ private:
         shape->setOutlineColor(_config->player.outlineColor());
         shape->setOutlineThickness(_config->player.outlineThickness);
 
-        return { shape };
+        return shape;
     }
 };
 

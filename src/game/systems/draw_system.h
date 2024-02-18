@@ -13,11 +13,8 @@ class DrawSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
     std::shared_ptr<sf::RenderWindow> _window;
 
-    std::shared_ptr<ecs::Filter> _shapeFilter;
-    std::shared_ptr<ecs::Filter> _textFilter;
-
-    std::shared_ptr<ecs::Pool<CText>> _textPool;
-    std::shared_ptr<ecs::Pool<CShape>> _shapePool;
+    std::shared_ptr<ecs::Filter> _filter;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool;
 
 public:
     explicit DrawSystem(std::shared_ptr<sf::RenderWindow> window)
@@ -26,31 +23,19 @@ public:
     }
 
     void init(ecs::World& world) override {
-        _textPool = world.pool<CText>();
-        _shapePool = world.pool<CShape>();
-
-        _shapeFilter = world.buildFilter()
-                .include<CShape>()
-                .build();
-
-        _textFilter = world.buildFilter()
-                .include<CText>()
+        _drawablePool = world.pool<CDrawable>();
+        _filter = world.buildFilter()
+                .include<CDrawable>()
                 .build();
     }
 
     void run(ecs::World& world) override {
         _window->clear();
 
-        for (const auto & entity : _shapeFilter->entities()) {
-            const auto & shape = _shapePool->get(entity);
+        for (const auto & entity : _filter->entities()) {
+            const auto & drawable = _drawablePool->get(entity);
 
-            _window->draw(*(shape.value));
-        }
-
-        for (const auto & entity : _textFilter->entities()) {
-            const auto & text = _textPool->get(entity);
-
-            _window->draw(*(text.value));
+            _window->draw(*(drawable.value));
         }
 
         _window->display();

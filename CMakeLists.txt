@@ -7,10 +7,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 include(FetchContent)
+
+FetchContent_Declare(ImGUI
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.90.3)
+FetchContent_MakeAvailable(ImGUI)
+
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
+
+message(PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+message(CMAKE_RUNTIME_OUTPUT_DIRECTORY="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+#add_custom_target(symlink-res COMMAND ${CMAKE_COMMAND} -E copy_directory ./res ${CMAKE_BINARY_DIR}/bin/res)
+ADD_CUSTOM_TARGET(link_target ALL
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${PROJECT_SOURCE_DIR}/res ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/res)
 
 add_executable(${PROJECT_NAME} src/main.cpp
         src/data/vector2.h
@@ -44,6 +57,7 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/game/config/config.cpp
         src/game/config/config.h
         src/game/systems/cooldown_tick_system.h
+        src/game/components/drawable.h
 
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics)

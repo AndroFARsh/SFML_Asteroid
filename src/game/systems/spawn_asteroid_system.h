@@ -24,13 +24,13 @@ private:
     std::shared_ptr<ecs::Pool<CAsteroidSpawnerTag>> _asteroidSpawnerTagPool = nullptr;
     std::shared_ptr<ecs::Pool<CCooldown>> _cooldownPool = nullptr;
 
-
     std::shared_ptr<ecs::Pool<CRotationVelocity>> _rotationVelocityPool = nullptr;
     std::shared_ptr<ecs::Pool<CAsteroidTag>> _asteroidTagPool = nullptr;
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
     std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool = nullptr;
     std::shared_ptr<ecs::Pool<CCollider>> _colliderPool = nullptr;
     std::shared_ptr<ecs::Pool<CShape>> _shapePool = nullptr;
+    std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool = nullptr;
     std::shared_ptr<ecs::Pool<CMass>> _massPool = nullptr;
 
 public:
@@ -49,6 +49,7 @@ public:
         _velocityPool = world.pool<CVelocity>();
         _colliderPool = world.pool<CCollider>();
         _shapePool = world.pool<CShape>();
+        _drawablePool = world.pool<CDrawable>();
         _massPool = world.pool<CMass>();
 
         _asteroidFilter = world.buildFilter()
@@ -87,10 +88,12 @@ public:
 
         auto position = createPosition();
         auto velocity = createVelocity(position) * speed;
+        auto shape = createShape(radius, mass, position);
 
         _asteroidTagPool->add(entity);
         _transformPool->add(entity, CTransform(position));
-        _shapePool->add(entity, createCShape(radius, mass, position));
+        _shapePool->add(entity, { shape });
+        _drawablePool->add(entity, { shape });
         _velocityPool->add(entity, { velocity  });
         _colliderPool->add(entity, { radius });
         _rotationVelocityPool->add(entity, { rotation });
@@ -135,8 +138,8 @@ public:
         return position;
     }
 
-    CShape createCShape(float radius, uint pointCount, Vector2 position) {
-        std::shared_ptr<sf::ConvexShape> shape = std::make_shared<sf::ConvexShape>();
+    std::shared_ptr<sf::ConvexShape> createShape(float radius, uint pointCount, Vector2 position) {
+        auto shape = std::make_shared<sf::ConvexShape>();
         shape->setPointCount(pointCount);
 
         auto angleStep = 360.f / float (pointCount);
@@ -150,7 +153,7 @@ public:
         shape->setOutlineColor(_config->asteroid.outlineColor());
         shape->setOutlineThickness(_config->asteroid.outlineThickness);
         shape->setOrigin(0.5f, 0.5f);
-        return { shape };
+        return shape;
     }
 };
 
