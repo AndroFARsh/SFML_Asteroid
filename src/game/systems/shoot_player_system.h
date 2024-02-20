@@ -18,7 +18,9 @@
 
 class ShootPlayerSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<Config> _config;
+    const std::string _name = "ShootPlayerSystem";
+
+    const Config& _config;
 
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
@@ -34,10 +36,12 @@ private:
     std::shared_ptr<ecs::Pool<CCollider>> _colliderPool;
 
 public:
-    ShootPlayerSystem(std::shared_ptr<Config> config)
-    : _config(std::move(config))
+    explicit ShootPlayerSystem(const Config& config)
+    : _config(config)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _transformPool = world.pool<CTransform>();
@@ -59,7 +63,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _filter->entities()) {
             const auto & input = _inputPool->get(entity);
             const auto & transform = _transformPool->get(entity);
@@ -67,7 +71,7 @@ public:
             if (input.shoot) {
                 spawnProjectile(world, transform.position, transform.forward());
 
-                _cooldownPool->add(entity, _config->player.shootCooldown);
+                _cooldownPool->add(entity, _config.player.shootCooldown);
             }
         }
     }
@@ -77,17 +81,17 @@ public:
         auto shape = createShape(position);
 
         _projectileTagPool->add(entity);
-        _transformPool->add(entity, CTransform(position + forward * _config->player.radius));
+        _transformPool->add(entity, CTransform(position + forward * _config.player.radius));
         _shapePool->add(entity, {shape });
         _drawablePool->add(entity, {shape });
-        _velocityPool->add(entity, { forward * _config->projectile.speed });
-        _colliderPool->add(entity, { _config->projectile.radius });
-        _lifespanPool->add(entity, {_config->projectile.lifespan });
+        _velocityPool->add(entity, { forward * _config.projectile.speed });
+        _colliderPool->add(entity, { _config.projectile.radius });
+        _lifespanPool->add(entity, {_config.projectile.lifespan });
     }
 
     std::shared_ptr<sf::CircleShape> createShape(Vector2 position) {
-        auto shape = std::make_shared<sf::CircleShape>(_config->projectile.radius, 5);
-        shape->setFillColor(_config->projectile.fillColor());
+        auto shape = std::make_shared<sf::CircleShape>(_config.projectile.radius, 5);
+        shape->setFillColor(_config.projectile.fillColor());
         shape->setOrigin(0.5f, 0.5f);
         shape->setPosition(position());
         return shape;

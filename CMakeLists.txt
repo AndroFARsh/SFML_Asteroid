@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.16)
-set(PROJECT_NAME  "A2_ECS_Asteroid")
+cmake_minimum_required(VERSION 3.2)
 
+set(PROJECT_NAME  "A2_ECS_Asteroid")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -8,22 +8,34 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 include(FetchContent)
 
+message(STATUS "Fetching ImGui...")
 FetchContent_Declare(ImGUI
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG v1.90.3)
 FetchContent_MakeAvailable(ImGUI)
+message(STATUS "Done ImGui...")
 
+message(STATUS "Fetching SFML...")
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
+message(STATUS "Done SFML...")
 
-message(PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-message(CMAKE_RUNTIME_OUTPUT_DIRECTORY="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "Fetching ImGui-SFML...")
+FetchContent_Declare(imgui-sfml
+        GIT_REPOSITORY https://github.com/SFML/imgui-sfml.git
+        GIT_TAG v2.6)
+set(IMGUI_DIR ${imgui_SOURCE_DIR})
+set(IMGUI_SFML_FIND_SFML OFF)
+set(IMGUI_SFML_IMGUI_DEMO ON)
+FetchContent_MakeAvailable(imgui-sfml)
+message(STATUS "Done ImGui-SFML...")
 
-#add_custom_target(symlink-res COMMAND ${CMAKE_COMMAND} -E copy_directory ./res ${CMAKE_BINARY_DIR}/bin/res)
+message(STATUS "Create res symlink CMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/res")
 ADD_CUSTOM_TARGET(link_target ALL
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${PROJECT_SOURCE_DIR}/res ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/res)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/res ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/res)
+
 
 add_executable(${PROJECT_NAME} src/main.cpp
         src/data/vector2.h
@@ -58,9 +70,10 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/game/config/config.h
         src/game/systems/cooldown_tick_system.h
         src/game/components/drawable.h
+        src/game/systems/dev_gui_system.h
 
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics)
+target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML::ImGui-SFML)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 if(WIN32)

@@ -76,7 +76,7 @@ struct Config {
     Projectile projectile;
     Fragment fragment;
 
-    static std::shared_ptr<Config> readFromFile(const std::string& iniPath);
+    static Config readFromFile(const std::string& iniPath);
 };
 
 

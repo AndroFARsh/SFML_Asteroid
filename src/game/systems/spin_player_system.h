@@ -14,6 +14,8 @@
 
 class SpinPlayerSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
+    const std::string _name = "SpinPlayerSystem";
+
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
@@ -21,6 +23,9 @@ private:
     std::shared_ptr<ecs::Pool<CSpinSpeed>> _speedPool = nullptr;
 
 public:
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
+
     void init(ecs::World& world) override {
         _transformPool = world.pool<CTransform>();
         _speedPool = world.pool<CSpinSpeed>();
@@ -34,7 +39,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _filter->entities()) {
             auto & transform = _transformPool->get(entity);
 

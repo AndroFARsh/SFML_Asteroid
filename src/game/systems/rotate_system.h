@@ -14,12 +14,15 @@
 
 class RotateSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
+    const std::string _name = "RotateSystem";
 
     std::shared_ptr<ecs::Filter> _filter = nullptr;
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
     std::shared_ptr<ecs::Pool<CRotationVelocity>> _rotationVelocityPool = nullptr;
 
 public:
+    [[nodiscard]] const std::string& name() const override { return _name; }
+
     void init(ecs::World& world) override {
         _transformPool = world.pool<CTransform>();
         _rotationVelocityPool = world.pool<CRotationVelocity>();
@@ -30,7 +33,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _filter->entities()) {
             auto & transform = _transformPool->get(entity);
             const auto & _rotationVelocity = _rotationVelocityPool->get(entity);

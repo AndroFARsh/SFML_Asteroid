@@ -13,7 +13,8 @@
 
 class DestroyPlayerSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<Config> _config;
+    const std::string _name = "DestroyPlayerSystem";
+    const Config& _config;
 
     std::shared_ptr<ecs::Filter> _playerFilter;
     std::shared_ptr<ecs::Filter> _scoreFilter;
@@ -32,10 +33,12 @@ private:
     std::shared_ptr<ecs::Pool<CScore>> _scorePool;
 
 public:
-    DestroyPlayerSystem(std::shared_ptr<Config> config)
-    : _config(std::move(config))
+    explicit DestroyPlayerSystem(const Config& config)
+    : _config(config)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World &world) override {
         _hitPool = world.pool<CCollisionHit>();
@@ -61,7 +64,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World &world) override {
+    void run(ecs::World &world, const sf::Time& dt) override {
         for (const auto &entity: _playerFilter->entities()) {
             spawnFragment(world, entity);
             updateScore();
@@ -95,18 +98,18 @@ public:
             _shapePool->add(entity, { shape });
             _drawablePool->add(entity, { shape });
             _transformPool->add(entity, CTransform(position));
-            _lifespanPool->add(entity, {_config->projectile.lifespan });
-            _velocityPool->add(entity, {forward * _config->fragment.speed });
-            _rotationVelocityPool->add(entity, {_config->fragment.rotationSpeed});
+            _lifespanPool->add(entity, {_config.projectile.lifespan });
+            _velocityPool->add(entity, {forward * _config.fragment.speed });
+            _rotationVelocityPool->add(entity, {_config.fragment.rotationSpeed});
         }
     }
 
     std::shared_ptr<sf::CircleShape> createShape(Vector2 position) {
         auto shape = std::make_shared<sf::CircleShape>(3, 3);
         shape->setPosition(position());
-        shape->setFillColor(_config->fragment.fillColor());
-        shape->setOutlineColor(_config->fragment.outlineColor());
-        shape->setOutlineThickness(_config->fragment.outlineThickness);
+        shape->setFillColor(_config.fragment.fillColor());
+        shape->setOutlineColor(_config.fragment.outlineColor());
+        shape->setOutlineThickness(_config.fragment.outlineThickness);
         shape->setOrigin(0.5f, 0.5f);
         return shape;
     }

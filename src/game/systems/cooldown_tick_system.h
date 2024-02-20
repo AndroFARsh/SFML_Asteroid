@@ -13,10 +13,13 @@
 
 class CooldownTickSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<ecs::Filter> _filter = nullptr;
+    const std::string _name = "CooldownTickSystem";
 
-    std::shared_ptr<ecs::Pool<CCooldown>> _cooldownPool = nullptr;
+    std::shared_ptr<ecs::Filter> _filter;
+
+    std::shared_ptr<ecs::Pool<CCooldown>> _cooldownPool;
 public:
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _cooldownPool = world.pool<CCooldown>();
@@ -26,7 +29,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (const auto & entity : _filter->entities()) {
             auto & cooldown = _cooldownPool->get(entity);
 

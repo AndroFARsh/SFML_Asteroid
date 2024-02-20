@@ -16,7 +16,8 @@
 
 class SpawnAsteroidSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<Config> _config;
+    const std::string _name = "SpawnAsteroidSystem";
+    const Config& _config;
 
     std::shared_ptr<ecs::Filter> _spawnFilter = nullptr;
     std::shared_ptr<ecs::Filter> _asteroidFilter = nullptr;
@@ -34,10 +35,12 @@ private:
     std::shared_ptr<ecs::Pool<CMass>> _massPool = nullptr;
 
 public:
-    SpawnAsteroidSystem(std::shared_ptr<Config> config)
-    : _config(std::move(config))
+    explicit SpawnAsteroidSystem(const Config& config)
+    : _config(config)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _asteroidSpawnerTagPool = world.pool<CAsteroidSpawnerTag>();
@@ -66,10 +69,10 @@ public:
         _asteroidSpawnerTagPool->add(spawnEntity);
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _spawnFilter->entities()) {
-            _cooldownPool->add(entity, { _config->gameplay.spawnCooldown });
-            if (_asteroidFilter->entities().size() < _config->gameplay.spawnMaxAlive) {
+            _cooldownPool->add(entity, { _config.gameplay.spawnCooldown });
+            if (_asteroidFilter->entities().size() < _config.gameplay.spawnMaxAlive) {
                 createNewObstacle(world);
             }
         }
@@ -78,13 +81,13 @@ public:
     void createNewObstacle(ecs::World& world) {
         auto entity = world.newEntity();
 
-        auto fMass = random(_config->asteroid.massMin, _config->asteroid.massMax);
+        auto fMass = random(_config.asteroid.massMin, _config.asteroid.massMax);
         auto mass = uint(fMass);
-        auto diff = (fMass - _config->asteroid.massMin) / (_config->asteroid.massMax - _config->asteroid.massMin);
-        auto rotation = random(_config->asteroid.rotationSpeedMin, _config->asteroid.rotationSpeedMax);
+        auto diff = (fMass - _config.asteroid.massMin) / (_config.asteroid.massMax - _config.asteroid.massMin);
+        auto rotation = random(_config.asteroid.rotationSpeedMin, _config.asteroid.rotationSpeedMax);
 
-        auto radius = _config->asteroid.baseRadius + 20.f * diff;
-        auto speed = _config->asteroid.baseSpeed - 1.2f * diff;
+        auto radius = _config.asteroid.baseRadius + 20.f * diff;
+        auto speed = _config.asteroid.baseSpeed - 1.2f * diff;
 
         auto position = createPosition();
         auto velocity = createVelocity(position) * speed;
@@ -102,17 +105,17 @@ public:
 
     Vector2 createVelocity(const Vector2& position) {
         return (Vector2T(
-                random(0.2f * float(_config->window.width), 0.8f * float(_config->window.width)),
-                random(0.2f * float(_config->window.height), 0.8f * float(_config->window.height))
+                random(0.2f * float(_config.window.width), 0.8f * float(_config.window.width)),
+                random(0.2f * float(_config.window.height), 0.8f * float(_config.window.height))
         ) - position).normalized();
     }
 
     Vector2 createPosition() {
-        auto screen = Vector2(float(_config->window.width), float(_config->window.width));
+        auto screen = Vector2(float(_config.window.width), float(_config.window.width));
         auto center = screen * 0.5f;
         auto position = Vector2T(
-                random(0.01f * float(_config->window.width), 0.99f * float(_config->window.width)),
-                random(0.01f * float(_config->window.height), 0.99f * float(_config->window.height))
+                random(0.01f * float(_config.window.width), 0.99f * float(_config.window.width)),
+                random(0.01f * float(_config.window.height), 0.99f * float(_config.window.height))
         );
 
         // left-top corner
@@ -149,9 +152,9 @@ public:
         }
 
         shape->setPosition(position());
-        shape->setFillColor(_config->asteroid.fillColor());
-        shape->setOutlineColor(_config->asteroid.outlineColor());
-        shape->setOutlineThickness(_config->asteroid.outlineThickness);
+        shape->setFillColor(_config.asteroid.fillColor());
+        shape->setOutlineColor(_config.asteroid.outlineColor());
+        shape->setOutlineThickness(_config.asteroid.outlineThickness);
         shape->setOrigin(0.5f, 0.5f);
         return shape;
     }

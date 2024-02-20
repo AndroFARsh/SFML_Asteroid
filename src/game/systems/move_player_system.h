@@ -14,6 +14,8 @@
 
 class MovePlayerSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
+    const std::string _name = "MovePlayerSystem";
+
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
     std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
@@ -23,6 +25,8 @@ private:
     std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool = nullptr;
 
 public:
+    [[nodiscard]] const std::string& name() const override { return _name; }
+
     void init(ecs::World& world) override {
         _transformPool = world.pool<CTransform>();
         _speedPool = world.pool<CMoveSpeed>();
@@ -40,7 +44,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _filter->entities()) {
             auto & velocity = _velocityPool->get(entity);
 

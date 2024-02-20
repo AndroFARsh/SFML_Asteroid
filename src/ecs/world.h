@@ -84,6 +84,7 @@ namespace ecs {
                         }
                     }
                     _entityToComponentsTypeSet.erase(entity);
+                    _entities.erase(entity);
                 }
                 _entitiesToDelete.clear();
 

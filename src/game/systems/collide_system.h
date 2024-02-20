@@ -14,18 +14,22 @@
 
 class CollideSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<ecs::Filter> _filter = nullptr;
+    const std::string _name = "CollideSystem";
 
-    std::shared_ptr<ecs::Pool<CCollisionHit>> _collisionHitPool = nullptr;
-    std::shared_ptr<ecs::Pool<CCollider>> _colliderPool = nullptr;
-    std::shared_ptr<ecs::Pool<CTransform>> _transformPool = nullptr;
-    std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool = nullptr;
+    std::shared_ptr<ecs::Filter> _filter;
 
-    std::shared_ptr<ecs::Pool<CPlayerTag>> _playerTagPool = nullptr;
-    std::shared_ptr<ecs::Pool<CAsteroidTag>> _asteroidTagPool = nullptr;
-    std::shared_ptr<ecs::Pool<CProjectileTag>> _projectileTagPool = nullptr;
+    std::shared_ptr<ecs::Pool<CCollisionHit>> _collisionHitPool;
+    std::shared_ptr<ecs::Pool<CCollider>> _colliderPool;
+    std::shared_ptr<ecs::Pool<CTransform>> _transformPool;
+    std::shared_ptr<ecs::Pool<CVelocity>> _velocityPool;
+
+    std::shared_ptr<ecs::Pool<CPlayerTag>> _playerTagPool;
+    std::shared_ptr<ecs::Pool<CAsteroidTag>> _asteroidTagPool;
+    std::shared_ptr<ecs::Pool<CProjectileTag>> _projectileTagPool;
 
 public:
+    [[nodiscard]] const std::string& name() const override { return _name; }
+
     void init(ecs::World &world) override {
         _transformPool = world.pool<CTransform>();
         _velocityPool = world.pool<CVelocity>();
@@ -43,7 +47,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World &world) override {
+    void run(ecs::World &world, const sf::Time& dt) override {
         for (auto entity: _filter->entities()) {
             checkCollision(entity);
         }

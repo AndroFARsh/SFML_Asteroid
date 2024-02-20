@@ -7,14 +7,14 @@
 
 #include "../../ini/ini_config.h"
 
-std::shared_ptr<Config>
+Config
 Config::readFromFile(const std::string &configPath) {
     IniConfig iniConfig(configPath);
 
     std::shared_ptr<sf::Font> font = std::make_shared<sf::Font>();
     font->loadFromFile(iniConfig.get("Font", "path", "./sofachrome.otf"));
 
-    return std::make_shared<Config>(Config {
+    return {
             .window {
                     iniConfig.get("Window", "name", ""),
                     iniConfig.get("Window", "width", 800u),
@@ -68,5 +68,5 @@ Config::readFromFile(const std::string &configPath) {
                     iniConfig.get("Fragment", "outline_thickness", 60.f),
                     iniConfig.get("Fragment", "lifespan", 60.f),
             }
-    });
+    };
 }

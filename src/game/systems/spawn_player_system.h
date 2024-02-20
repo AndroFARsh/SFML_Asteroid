@@ -17,7 +17,8 @@
 
 class SpawnPlayerSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<Config> _config;
+    const std::string _name = "SpawnPlayerSystem";
+    const Config& _config;
 
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
@@ -33,10 +34,12 @@ private:
     std::shared_ptr<ecs::Pool<CCollider>> _colliderPool = nullptr;
 
 public:
-    SpawnPlayerSystem(std::shared_ptr<Config> config)
-    : _config(std::move(config))
+    explicit SpawnPlayerSystem(const Config& config)
+    : _config(config)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _playerTagPool = world.pool<CPlayerTag>();
@@ -55,7 +58,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         if (_filter->entities().empty()) {
             createNewPlayer(world);
         }
@@ -66,7 +69,7 @@ private:
     void createNewPlayer(ecs::World& world) {
         auto entity = world.newEntity();
 
-        auto position = Vector2 (floor(_config->window.width), floor(_config->window.height)) * .5f;
+        auto position = Vector2 (floor(_config.window.width), floor(_config.window.height)) * .5f;
 
         _playerTagPool->add(entity);
         _transformPool->add(entity, CTransform(position));
@@ -78,27 +81,27 @@ private:
         _inputPool->add(entity);
         _velocityPool->add(entity);
 
-        _spinSpeedPool->add(entity, { _config->player.spinSpeed });
-        _moveSpeedPool->add(entity, { _config->player.moveSpeed });
-        _moveAccelerationPool->add(entity, { _config->player.moveAcceleration });
-        _colliderPool->add(entity, { _config->player.radius });
+        _spinSpeedPool->add(entity, { _config.player.spinSpeed });
+        _moveSpeedPool->add(entity, { _config.player.moveSpeed });
+        _moveAccelerationPool->add(entity, { _config.player.moveAcceleration });
+        _colliderPool->add(entity, { _config.player.radius });
     }
 
     std::shared_ptr<sf::ConvexShape> createShape(Vector2 position) {
         auto shape = std::make_shared<sf::ConvexShape>();
         shape->setPointCount(4);
 
-        shape->setPoint(0, sf::Vector2f(0.f, -1.f) * _config->player.radius);
-        shape->setPoint(1, sf::Vector2f(0.7f, 1.f) * _config->player.radius);
-        shape->setPoint(2, sf::Vector2f(0.f, 0.5f) * _config->player.radius);
-        shape->setPoint(3, sf::Vector2f(-0.7f, 1.f) * _config->player.radius);
+        shape->setPoint(0, sf::Vector2f(0.f, -1.f) * _config.player.radius);
+        shape->setPoint(1, sf::Vector2f(0.7f, 1.f) * _config.player.radius);
+        shape->setPoint(2, sf::Vector2f(0.f, 0.5f) * _config.player.radius);
+        shape->setPoint(3, sf::Vector2f(-0.7f, 1.f) * _config.player.radius);
 
         shape->setOrigin(0.5f, 0.5f);
 
         shape->setPosition(position());
-        shape->setFillColor(_config->player.fillColor());
-        shape->setOutlineColor(_config->player.outlineColor());
-        shape->setOutlineThickness(_config->player.outlineThickness);
+        shape->setFillColor(_config.player.fillColor());
+        shape->setOutlineColor(_config.player.outlineColor());
+        shape->setOutlineThickness(_config.player.outlineThickness);
 
         return shape;
     }

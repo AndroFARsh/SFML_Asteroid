@@ -14,11 +14,14 @@
 
 class Game {
 private:
-    std::shared_ptr<Config> _config;
-    std::shared_ptr<sf::RenderWindow> _window;
-    std::shared_ptr<ecs::World> _world;
-    std::shared_ptr<ecs::Systems> _systems;
+    Config _config {};
+    sf::Event _event {};
+    sf::Clock _deltaClock {};
 
+    sf::RenderWindow _window;
+
+    ecs::World _world;
+    ecs::Systems _systems;
 
 public:
     explicit Game(const std::string& configPath) noexcept;

@@ -14,7 +14,8 @@
 
 class UpdateShapeTransformSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
-    std::shared_ptr<Config> _config;
+    const std::string _name = "UpdateShapeTransformSystem";
+    const Config& _config;
 
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
@@ -22,10 +23,12 @@ private:
     std::shared_ptr<ecs::Pool<CShape>> _shapePool;
 
 public:
-    UpdateShapeTransformSystem(const std::shared_ptr<Config>& config)
+    explicit UpdateShapeTransformSystem(const Config& config)
     : _config(config)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _transformPool = world.pool<CTransform>();
@@ -37,16 +40,16 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (auto entity : _filter->entities()) {
             auto &transform = _transformPool->get(entity);
             auto &shape = _shapePool->get(entity);
 
-            if (transform.position.x < 0) transform.position.x += float(_config->window.width);
-            if (transform.position.x > float(_config->window.width)) transform.position.x -= float(_config->window.width);
+            if (transform.position.x < 0) transform.position.x += float(_config.window.width);
+            if (transform.position.x > float(_config.window.width)) transform.position.x -= float(_config.window.width);
 
-            if (transform.position.y < 0) transform.position.y += float(_config->window.height);
-            if (transform.position.y > float(_config->window.height)) transform.position.y -= float(_config->window.height);
+            if (transform.position.y < 0) transform.position.y += float(_config.window.height);
+            if (transform.position.y > float(_config.window.height)) transform.position.y -= float(_config.window.height);
 
             shape.value->setPosition(transform.position());
             shape.value->setRotation(transform.rotation);

@@ -13,9 +13,13 @@
 
 class DestroyProjectileSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
+    const std::string _name = "DestroyProjectileSystem";
+
     std::shared_ptr<ecs::Filter> _filter;
 
 public:
+    [[nodiscard]] const std::string& name() const override { return _name; }
+
     void init(ecs::World &world) override {
         _filter = world.buildFilter()
                 .include<CProjectileTag>()
@@ -23,7 +27,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World &world) override {
+    void run(ecs::World &world, const sf::Time& dt) override {
         for (const auto &entity: _filter->entities()) {
             world.deleteEntity(entity);
         }

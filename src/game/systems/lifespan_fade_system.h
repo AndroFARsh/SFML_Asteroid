@@ -13,11 +13,15 @@
 
 class LifespanFadeSystem : public ecs::IInitSystem, public ecs::IRunSystem {
 private:
+    const std::string _name = "LifespanFadeSystem";
+
     std::shared_ptr<ecs::Filter> _filter = nullptr;
 
     std::shared_ptr<ecs::Pool<CLifespan>> _lifespanPool = nullptr;
     std::shared_ptr<ecs::Pool<CShape>> _shapePool = nullptr;
 public:
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _lifespanPool = world.pool<CLifespan>();
@@ -29,7 +33,7 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
+    void run(ecs::World& world, const sf::Time& dt) override {
         for (const auto & entity : _filter->entities()) {
             auto & shape = _shapePool->get(entity);
             auto & lifespan = _lifespanPool->get(entity);

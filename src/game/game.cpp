@@ -26,19 +26,13 @@
 #include "systems/destroy_player_system.h"
 #include "systems/destroy_projectile_system.h"
 #include "systems/score_system.h"
+#include "systems/dev_gui_system.h"
 
 Game::Game(const std::string& configPath) noexcept
-: _config(Config::readFromFile(configPath))
-, _window(std::make_shared<sf::RenderWindow>())
-, _world(std::make_shared<ecs::World>())
-, _systems(nullptr)
-{
-    _window->create({ _config->window.width, _config->window.height }, _config->window.name, _config->window.style);
-    _window->setFramerateLimit(_config->window.frameRate);
-
-    _systems = ecs::SystemsBuilder()
-            .add(std::make_shared<InputSystem>(_window))
-
+: _config(std::move(Config::readFromFile(configPath)))
+, _systems(std::move(
+        ecs::Systems::builder()
+            .add(std::make_shared<InputSystem>())
             .add(std::make_shared<ScoreSystem>(_config))
 
             .add(std::make_shared<SpawnPlayerSystem>(_config))
@@ -59,19 +53,40 @@ Game::Game(const std::string& configPath) noexcept
 
             .add(std::make_shared<UpdateShapeTransformSystem>(_config))
             .add(std::make_shared<LifespanFadeSystem>())
+
             .add(std::make_shared<DrawSystem>(_window))
+            .add(std::make_shared<DevGuiSystem>(_window, _systems))
 
             .add(std::make_shared<CooldownTickSystem>())
             .add(std::make_shared<LifespanTickSystem>())
-            .build();
+            .build()
+        ))
+{
 }
 
 void Game::run() {
-    _systems->init(*_world);
+    _window.create({ _config.window.width, _config.window.height }, _config.window.name, _config.window.style);
+    _window.setFramerateLimit(_config.window.frameRate);
 
-    while (_window->isOpen()) {
-        _systems->run(*_world);
+    _systems.init(_world);
+    while (_window.isOpen()) {
+        while(_window.pollEvent(_event)) {
+            if (_event.type == sf::Event::Closed) _window.close();
+
+            _systems.event(_world, _event);
+        }
+
+        // Update system
+        _systems.run(_world, _deltaClock.restart());
+
+        // Render block
+        _window.clear();
+
+        _systems.render(_world);
+
+        _window.display();
+
     }
 
-    _systems->dispose(*_world);
+    _systems.dispose(_world);
 }

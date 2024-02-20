@@ -9,18 +9,22 @@
 #include <memory>
 #include "../../ecs/systems.h"
 
-class DrawSystem : public ecs::IInitSystem, public ecs::IRunSystem {
+class DrawSystem : public ecs::IInitSystem, public ecs::IRenderSystem {
 private:
-    std::shared_ptr<sf::RenderWindow> _window;
+    const std::string _name = "DrawSystem";
+
+    sf::RenderWindow& _window;
 
     std::shared_ptr<ecs::Filter> _filter;
     std::shared_ptr<ecs::Pool<CDrawable>> _drawablePool;
 
 public:
-    explicit DrawSystem(std::shared_ptr<sf::RenderWindow> window)
-    : _window(std::move(window))
+    explicit DrawSystem(sf::RenderWindow& window)
+    : _window(window)
     {
     }
+
+    [[nodiscard]] const std::string& name() const override { return _name; }
 
     void init(ecs::World& world) override {
         _drawablePool = world.pool<CDrawable>();
@@ -29,16 +33,13 @@ public:
                 .build();
     }
 
-    void run(ecs::World& world) override {
-        _window->clear();
-
+    void render(ecs::World& world) override {
         for (const auto & entity : _filter->entities()) {
             const auto & drawable = _drawablePool->get(entity);
-
-            _window->draw(*(drawable.value));
+            if (drawable.value) {
+                _window.draw(*(drawable.value));
+            }
         }
-
-        _window->display();
     }
 };
 
